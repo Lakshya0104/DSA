@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RescueRoute — Emergency Dispatch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">RescueRoute</div>
+        <div class="brand-sub">Emergency Dispatch &amp; Routing · <span id="cityName">—</span></div>
+      </div>
+    </div>
+
+    <div class="clock">
+      <span class="live-dot" id="liveDot"></span>
+      <span class="clock-label">Sim time</span>
+      <span class="mono" id="simClock">00:00:00</span>
+      <span class="badge" id="sourceBadge">—</span>
+    </div>
+
+    <div class="top-actions">
+      <label class="switch"><input type="checkbox" id="autoToggle" checked /><span></span>Auto incidents</label>
+      <label class="switch"><input type="checkbox" id="rushToggle" /><span></span>Rush hour</label>
+      <label class="switch"><input type="checkbox" id="coverageToggle" /><span></span>Coverage map</label>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Left: operations -->
+    <aside class="panel left">
+      <section class="kpis">
+        <div class="kpi"><div class="kpi-label">Active incidents</div><div class="kpi-value" id="kpiActive">0</div><div class="kpi-foot" id="kpiQueued">0 waiting</div></div>
+        <div class="kpi"><div class="kpi-label">Fleet available</div><div class="kpi-value" id="kpiFleet">0/0</div><div class="kpi-foot" id="kpiFleetFoot">units idle</div></div>
+        <div class="kpi"><div class="kpi-label">Avg response</div><div class="kpi-value" id="kpiAvg">—</div><div class="kpi-foot" id="kpiP90">P90 —</div></div>
+        <div class="kpi"><div class="kpi-label">Resolved</div><div class="kpi-value" id="kpiResolved">0</div><div class="kpi-foot" id="kpiReroutes">0 reroutes</div></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3>Response times</h3><span class="muted small">last 30 calls · minutes</span></div>
+        <svg id="spark" class="spark" viewBox="0 0 300 70" preserveAspectRatio="none"></svg>
+      </section>
+
+      <section class="card grow">
+        <div class="card-head"><h3>Incidents</h3><span class="muted small">triage order · max-heap</span></div>
+        <div id="incidentList" class="list"></div>
+      </section>
+
+      <section class="card grow">
+        <div class="card-head"><h3>Fleet</h3><span class="muted small" id="fleetCount"></span></div>
+        <div id="fleetList" class="list"></div>
+      </section>
+    </aside>
+
+    <!-- Map -->
+    <section class="map-wrap">
+      <div id="map"></div>
+      <div class="map-hint" id="mapHint">Click anywhere on the map to report an incident</div>
+      <div class="legend">
+        <div><i class="dot idle"></i>Available</div>
+        <div><i class="dot to_scene"></i>En route</div>
+        <div><i class="dot on_scene"></i>On scene</div>
+        <div><i class="dot transporting"></i>Transporting</div>
+        <div><i class="sq"></i>Hospital</div>
+        <div><i class="ln"></i>Closed road</div>
+      </div>
+      <div class="coverage-legend hidden" id="coverageLegend">
+        <div class="cl-title">Time to nearest hospital</div>
+        <div class="cl-row"><i style="background:#16a34a"></i>&lt; 3 min</div>
+        <div class="cl-row"><i style="background:#84cc16"></i>3–5 min</div>
+        <div class="cl-row"><i style="background:#eab308"></i>5–8 min</div>
+        <div class="cl-row"><i style="background:#f97316"></i>8–12 min</div>
+        <div class="cl-row"><i style="background:#dc2626"></i>&gt; 12 min / cut off</div>
+      </div>
+    </section>
+
+    <!-- Right: tools & algorithm insight -->
+    <aside class="panel right">
+      <section class="card">
+        <div class="card-head"><h3>Map tool</h3></div>
+        <div class="segmented" id="modeSwitch">
+          <button data-mode="incident" class="active">Report incident</button>
+          <button data-mode="route">Route planner</button>
+          <button data-mode="block">Close road</button>
+        </div>
+        <div class="tool-body" data-for="incident">
+          <div class="field-label">Severity</div>
+          <div class="chips" id="severityChips">
+            <button data-sev="1" class="chip sev1">Critical</button>
+            <button data-sev="2" class="chip sev2 active">Serious</button>
+            <button data-sev="3" class="chip sev3">Minor</button>
+          </div>
+          <p class="help">Incidents enter a priority queue (severity, then time). Each one is assigned the idle ambulance with the shortest <b>road</b> travel time, found with a single reverse Dijkstra search.</p>
+        </div>
+        <div class="tool-body hidden" data-for="route">
+          <p class="help">Click a start point and then a destination. Dijkstra and A* run on the same query so you can compare how many nodes each one explores.</p>
+          <div class="row-btns">
+            <button class="btn" id="replayBtn" disabled>Replay search</button>
+            <button class="btn ghost" id="clearRouteBtn">Clear</button>
+          </div>
+        </div>
+        <div class="tool-body hidden" data-for="block">
+          <p class="help">Click a road to close or reopen it. Ambulances whose route uses it re-plan with A*. A union-find pass then counts any cut-off areas.</p>
+          <div class="row-btns"><button class="btn ghost" id="clearBlocksBtn">Reopen all roads</button></div>
+        </div>
+      </section>
+
+      <section class="card" id="routeCard">
+        <div class="card-head"><h3>Dijkstra vs A*</h3><span class="muted small" id="routeCache"></span></div>
+        <div id="routeCompare" class="empty">Use the route planner to compare algorithms.</div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3>Last dispatch decision</h3></div>
+        <div id="dispatchInfo" class="empty">Waiting for first incident…</div>
+      </section>
+
+      <section class="card" id="networkCard">
+        <div class="card-head"><h3>Network health</h3></div>
+        <div class="stat-grid" id="networkStats"></div>
+        <div id="coverageStats"></div>
+      </section>
+
+      <section class="card grow">
+        <div class="card-head"><h3>Activity</h3></div>
+        <div id="log" class="log"></div>
+      </section>
+    </aside>
+  </main>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

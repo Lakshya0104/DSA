@@ -1,0 +1,19 @@
+{
+  "name": "rescueroute",
+  "version": "1.0.0",
+  "description": "Emergency dispatch & city traffic routing dashboard powered by hand-written graph algorithms",
+  "main": "server/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "leaflet": "^1.9.4"
+  }
+}
