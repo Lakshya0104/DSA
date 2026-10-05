@@ -83,6 +83,7 @@
   let severity = 2;
   let selectedInc = null;
   const roadLines = [];
+  const wardLayers = [];
 
   const ROAD_STYLE = {
     trunk: { casing: '#e3a03d', fill: '#ffd88a', w: [3.5, 7] },
@@ -99,7 +100,7 @@
 
   function drawBasemap(m) {
     for (const w of m.wards) {
-      L.polygon(w.ring, { renderer: wardCanvas, color: '#dfe4ec', weight: 1, fillColor: '#f4f6f9', fillOpacity: 1, interactive: false }).addTo(map);
+      wardLayers.push(L.polygon(w.ring, { renderer: wardCanvas, color: '#c9d1de', weight: 1, fillColor: '#f4f6f9', fillOpacity: 1, interactive: false }).addTo(map));
     }
     for (const casing of [true, false]) {
       for (const cls of ['residential', 'secondary', 'primary', 'trunk']) {
@@ -137,12 +138,15 @@
   // ------------------------------------------------------------ boot
   async function boot() {
     meta = await api('/api/meta');
-    if (!backend) {
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd', maxZoom: 19, opacity: 0.55,
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
-      }).addTo(map);
-    }
+    // Street tiles where the host allows them; the vector road graph is drawn either way.
+    const tiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 19, opacity: 0.9,
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+    }).addTo(map);
+    tiles.once('tileload', () => {
+      wardLayers.forEach((p) => p.setStyle({ fillOpacity: 0 }));
+      roadLines.forEach((r) => r.line.setStyle({ opacity: r.casing ? 0 : 0.55 }));
+    });
     map.attributionControl.addAttribution('Roads: BMTC route geometry (Vonter/bmtc-gtfs) · Wards: BBMP via DataMeet');
     drawBasemap(meta);
     const [s, w, n, e] = meta.bbox;

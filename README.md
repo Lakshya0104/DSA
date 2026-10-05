@@ -21,6 +21,15 @@ For Bengaluru the app ships with a **real road network** in `data/bengaluru.json
 
 `npm test` runs the test suite. Each data structure and algorithm is checked against a brute-force or reference implementation (Bellman-Ford, linear scan).
 
+### Deploy to Vercel
+
+The repo is set up for Vercel through `vercel.json`. Vercel runs `node scripts/build-standalone.js` and serves `dist/` as a static site, so there's no server to keep running.
+
+1. Push this repo to GitHub.
+2. On vercel.com, go to **Add New → Project**, import the repo, and click **Deploy**. The settings come from `vercel.json`, so leave them as they are.
+
+You can deploy from the command line instead with `npx vercel --prod`.
+
 ### Shareable prototype
 
 `node scripts/build-standalone.js` writes `dist/rescueroute.html`. This single file runs the same backend modules in the browser, so it can be hosted anywhere without a server.

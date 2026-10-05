@@ -44,19 +44,22 @@ ${modules.map((m) => `  defs[${JSON.stringify(m)}] = function (module, exports, 
 const adapter = read('scripts/standalone-backend.js')
   .replace('/*__BENGALURU__*/null', fs.readFileSync(path.join(root, 'data/bengaluru.json'), 'utf8'));
 const leafletCss = fs.readFileSync(require.resolve('leaflet/dist/leaflet.css'), 'utf8');
-let html = read('public/index.html');
-html = html
-  .replace(/<!doctype html>\s*<html[^>]*>\s*<head>/i, '')
-  .replace(/<meta charset[^>]*>\s*<meta name="viewport"[^>]*>/, '')
-  .replace('<title>RescueRoute — Emergency Dispatch</title>', '<title>RescueRoute</title>')
+// Full page (index.html, for static hosts such as Vercel)
+const page = read('public/index.html')
   .replace('<link rel="stylesheet" href="vendor/leaflet/leaflet.css" />', `<style>${leafletCss}</style>`)
   .replace('<link rel="stylesheet" href="styles.css" />', `<style>${read('public/styles.css')}</style>`)
-  .replace(/<\/head>\s*<body>/, '')
   .replace('<script src="vendor/leaflet/leaflet.js"></script>',
     '<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>')
   .replace('<script src="app.js"></script>',
     `<script>${bundle}</script>\n<script>${adapter}</script>\n<script>${read('public/app.js')}</script>`)
+  ;
+// Fragment for claude.ai artifacts, which supply their own document skeleton.
+const fragment = page
+  .replace(/<!doctype html>\s*<html[^>]*>\s*<head>/i, '')
+  .replace(/<meta charset[^>]*>\s*<meta name="viewport"[^>]*>/, '')
+  .replace(/<\/head>\s*<body>/, '')
   .replace(/<\/body>\s*<\/html>\s*$/, '');
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
-fs.writeFileSync(path.join(root, 'dist/rescueroute.html'), html);
-console.log('wrote dist/rescueroute.html', (html.length / 1024).toFixed(0) + ' KB');
+fs.writeFileSync(path.join(root, 'dist/index.html'), page);
+fs.writeFileSync(path.join(root, 'dist/rescueroute.html'), fragment);
+console.log('wrote dist/index.html and dist/rescueroute.html', (page.length / 1024).toFixed(0) + ' KB');
