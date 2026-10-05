@@ -129,7 +129,32 @@ function buildSynthetic(city) {
   return { lat, lng, edges, hospitals: city.hospitals, meta: { source: 'synthetic', city: city.name } };
 }
 
+// Bus-corridor speeds (km/h) reflecting Bengaluru traffic, keyed by class.
+const BMTC_SPEEDS = { trunk: 38, primary: 32, secondary: 27, residential: 22 };
+
+/**
+ * Real Bengaluru network prebuilt by scripts/build_bengaluru.py from BMTC
+ * route geometry; every edge is two-way.
+ */
+function buildFromBmtc(raw, city) {
+  const edges = [];
+  for (const [a, b, cls] of raw.edges) {
+    const speed = BMTC_SPEEDS[cls] / 3.6;
+    const length = haversine(raw.lat[a], raw.lng[a], raw.lat[b], raw.lng[b]);
+    edges.push({ from: a, to: b, speed, roadClass: cls, length }, { from: b, to: a, speed, roadClass: cls, length });
+  }
+  return {
+    lat: raw.lat, lng: raw.lng, edges, hospitals: raw.hospitals, wards: raw.wards, landmarks: raw.landmarks,
+    meta: { source: 'bmtc', city: city.name },
+  };
+}
+
 async function loadGraph(city, { dataDir, offline = false, log = console.log } = {}) {
+  const bundled = path.join(dataDir, `${city.key}.json`);
+  if (fs.existsSync(bundled)) {
+    log(`Loading real road network ${path.basename(bundled)}`);
+    return new Graph(buildFromBmtc(JSON.parse(fs.readFileSync(bundled, 'utf8')), city));
+  }
   const cacheFile = path.join(dataDir, `osm-${city.key}.json`);
   if (fs.existsSync(cacheFile)) {
     log(`Loading cached road network ${path.basename(cacheFile)}`);
@@ -154,4 +179,4 @@ async function loadGraph(city, { dataDir, offline = false, log = console.log } =
   return new Graph(buildSynthetic(city));
 }
 
-module.exports = { loadGraph, buildFromOsm, buildSynthetic };
+module.exports = { loadGraph, buildFromOsm, buildSynthetic, buildFromBmtc };

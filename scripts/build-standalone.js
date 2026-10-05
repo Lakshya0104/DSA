@@ -14,7 +14,7 @@ const modules = [
   'server/ds/IndexedMinHeap.js', 'server/ds/PriorityQueue.js', 'server/ds/KDTree.js',
   'server/ds/UnionFind.js', 'server/ds/LRUCache.js', 'server/graph/geo.js', 'server/graph/Graph.js',
   'server/graph/loader.js', 'server/algorithms/search.js', 'server/algorithms/coverage.js',
-  'server/sim/Simulation.js', 'server/config.js',
+  'server/sim/Simulation.js', 'server/config.js', 'server/basemap.js',
 ];
 
 const bundle = `
@@ -41,7 +41,8 @@ ${modules.map((m) => `  defs[${JSON.stringify(m)}] = function (module, exports, 
 })();
 `;
 
-const adapter = read('scripts/standalone-backend.js');
+const adapter = read('scripts/standalone-backend.js')
+  .replace('/*__BENGALURU__*/null', fs.readFileSync(path.join(root, 'data/bengaluru.json'), 'utf8'));
 const leafletCss = fs.readFileSync(require.resolve('leaflet/dist/leaflet.css'), 'utf8');
 let html = read('public/index.html');
 html = html

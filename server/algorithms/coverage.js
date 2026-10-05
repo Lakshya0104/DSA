@@ -41,10 +41,18 @@ function hospitalCoverage(graph, thresholdSeconds = 480) {
     bins[min < 3 ? 0 : min < 5 ? 1 : min < 8 ? 2 : min < 12 ? 3 : 4]++;
     points.push([+graph.lat[v].toFixed(5), +graph.lng[v].toFixed(5), t === Infinity ? -1 : Math.round(t)]);
   }
+  // Ward choropleth: mean minutes to hospital over the ward's intersections.
+  const wardSum = new Float64Array(graph.wards.length), wardCnt = new Int32Array(graph.wards.length);
+  for (let v = 0; v < graph.n; v++) {
+    const w = graph.wardOf[v];
+    if (w >= 0 && dist[v] !== Infinity) { wardSum[w] += dist[v]; wardCnt[w]++; }
+  }
+  const wards = graph.wards.map((w, i) => ({ name: w.name, avgSeconds: wardCnt[i] ? wardSum[i] / wardCnt[i] : null }));
   const underserved = points.filter((p) => p[2] < 0 || p[2] > thresholdSeconds).length;
   return {
     points,
     bins,
+    wards,
     avgSeconds: reachable ? sum / reachable : 0,
     worstSeconds: worst,
     underservedPct: (100 * underserved) / graph.n,

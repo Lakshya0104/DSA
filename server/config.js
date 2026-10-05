@@ -5,8 +5,8 @@ const CITIES = {
     key: 'bengaluru',
     name: 'Bengaluru',
     // south, west, north, east — Central Bengaluru / Koramangala / Indiranagar
-    bbox: [12.925, 77.575, 12.99, 77.66],
-    center: [12.958, 77.615],
+    bbox: [12.885, 77.525, 13.045, 77.69],
+    center: [12.965, 77.6],
     hospitals: [
       { name: 'St. John\'s Medical College Hospital', lat: 12.9299, lng: 77.6190 },
       { name: 'Manipal Hospital, Old Airport Rd', lat: 12.9590, lng: 77.6485 },
@@ -45,8 +45,8 @@ module.exports = {
   PORT: Number(process.env.PORT) || 3000,
   CITY: CITIES[(process.env.CITY || 'bengaluru').toLowerCase()] || CITIES.bengaluru,
   OFFLINE: process.env.OFFLINE === '1',
-  FLEET_SIZE: Number(process.env.FLEET_SIZE) || 10,
-  SIM_SPEED: Number(process.env.SIM_SPEED) || 6, // simulated seconds per real second
+  FLEET_SIZE: Number(process.env.FLEET_SIZE) || 14,
+  SIM_SPEED: Number(process.env.SIM_SPEED) || 8, // simulated seconds per real second
   TICK_MS: 500,
   ON_SCENE_SECONDS: 240,
   HANDOVER_SECONDS: 180,

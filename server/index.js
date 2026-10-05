@@ -6,6 +6,7 @@ const cfg = require('./config');
 const { loadGraph } = require('./graph/loader');
 const { Simulation } = require('./sim/Simulation');
 const { hospitalCoverage } = require('./algorithms/coverage');
+const { basemap } = require('./basemap');
 
 async function main() {
   const graph = await loadGraph(cfg.CITY, { dataDir: path.join(__dirname, '..', 'data'), offline: cfg.OFFLINE });
@@ -20,8 +21,10 @@ async function main() {
   const num = (x) => typeof x === 'number' && Number.isFinite(x);
   const point = (p) => p && num(p.lat) && num(p.lng);
 
+  const base = basemap(graph);
   app.get('/api/meta', (req, res) => {
     res.json({
+      ...base,
       city: cfg.CITY.name, center: cfg.CITY.center, bbox: cfg.CITY.bbox, source: graph.meta.source,
       nodes: graph.n, edges: graph.m, simSpeed: cfg.SIM_SPEED,
       hospitals: graph.hospitals.map((h) => ({ id: h.id, name: h.name, lat: graph.lat[h.node], lng: graph.lng[h.node] })),

@@ -38,12 +38,18 @@ class Simulation extends EventEmitter {
     this.stats = {
       dispatched: 0, resolved: 0, responseTimes: [], reroutes: 0,
       lastDispatch: null, stranded: 0,
+      closed: [],                 // finished calls, for analytics
+      hospitalLoad: new Map(),    // hospital -> patients received
+      wardCalls: new Map(),       // ward -> calls
+      reported: [],               // [simTime, severity] of every call
+      responseBySev: [],          // [severity, seconds]
     };
     this.ambulances = Array.from({ length: cfg.FLEET_SIZE }, (_, i) => {
       const h = graph.hospitals[i % graph.hospitals.length];
       return {
         id: `AMB-${String(i + 1).padStart(2, '0')}`,
-        node: h.node, base: h.id, status: 'idle', route: null, incidentId: null, timerUntil: 0, trips: 0,
+        node: h.node, base: h.id, baseName: h.name, status: 'idle', route: null, incidentId: null, timerUntil: 0, trips: 0,
+        busy: 0, meters: 0,
       };
     });
     this.connectivity = graph.connectivity();
@@ -68,7 +74,9 @@ class Simulation extends EventEmitter {
   _makeRoute(path, edges) {
     const cum = new Float64Array(path.length);
     for (let i = 0; i < edges.length; i++) cum[i + 1] = cum[i] + this.g.cost(edges[i]);
-    return { path, edges, cum, start: this.simTime, total: cum[cum.length - 1] };
+    let meters = 0;
+    for (const e of edges) meters += this.g.length[e];
+    return { path, edges, cum, meters, start: this.simTime, total: cum[cum.length - 1] };
   }
 
   _fromForward(res, target) {
@@ -153,8 +161,11 @@ class Simulation extends EventEmitter {
       id, node, lat: this.g.lat[node], lng: this.g.lng[node], severity,
       type: type || pool[Math.floor(this.rand() * pool.length)],
       status: 'queued', reportedAt: this.simTime, ambulance: null, hospital: null,
-      arrivedAt: null, resolvedAt: null, street: this._streetName(node),
+      arrivedAt: null, resolvedAt: null, street: this.g.nearestLandmark(node) || this._streetName(node),
+      ward: this.g.wardName(node),
     };
+    this.stats.reported.push([this.simTime, severity]);
+    if (inc.ward) this.stats.wardCalls.set(inc.ward, (this.stats.wardCalls.get(inc.ward) || 0) + 1);
     this.incidents.set(id, inc);
     this.queue.push(inc);
     this.log('incident', `${id} ${SEVERITY[severity]}: ${inc.type}${inc.street ? ' near ' + inc.street : ''}`);
@@ -334,7 +345,9 @@ class Simulation extends EventEmitter {
 
     for (const amb of this.ambulances) {
       const inc = amb.incidentId ? this.incidents.get(amb.incidentId) : null;
+      if (amb.status !== 'idle') amb.busy += dt;
       if (amb.route && this.simTime - amb.route.start >= amb.route.total) {
+        amb.meters += amb.route.meters;
         amb.node = amb.route.path[amb.route.path.length - 1];
         amb.route = null;
         if (amb.status === 'to_scene') {
@@ -343,6 +356,7 @@ class Simulation extends EventEmitter {
           inc.status = 'on_scene';
           inc.arrivedAt = this.simTime;
           this.stats.responseTimes.push(inc.arrivedAt - inc.reportedAt);
+          this.stats.responseBySev.push([inc.severity, inc.arrivedAt - inc.reportedAt]);
           this.log('arrive', `${amb.id} on scene at ${inc.id} · response ${((inc.arrivedAt - inc.reportedAt) / 60).toFixed(1)} min`);
         } else if (amb.status === 'transporting') {
           amb.status = 'handover';
@@ -350,12 +364,15 @@ class Simulation extends EventEmitter {
           inc.status = 'resolved';
           inc.resolvedAt = this.simTime;
           this.stats.resolved++;
+          this.stats.hospitalLoad.set(inc.hospital, (this.stats.hospitalLoad.get(inc.hospital) || 0) + 1);
+          this._close(inc);
           this.log('resolve', `${inc.id} handed over at ${inc.hospital}`);
         }
       } else if (amb.status === 'on_scene' && this.simTime >= amb.timerUntil) {
         if (inc.severity === 3 && this.rand() < 0.5) {
           inc.status = 'resolved'; inc.resolvedAt = this.simTime; inc.hospital = 'Treated on scene';
           this.stats.resolved++;
+          this._close(inc);
           amb.status = 'idle'; amb.incidentId = null;
           this.log('resolve', `${inc.id} treated on scene; ${amb.id} available`);
         } else {
@@ -375,6 +392,43 @@ class Simulation extends EventEmitter {
     this._dispatchPending();
   }
 
+  _close(inc) {
+    this.stats.closed.push({
+      id: inc.id, severity: inc.severity, response: inc.arrivedAt - inc.reportedAt,
+      total: inc.resolvedAt - inc.reportedAt, ward: inc.ward, hospital: inc.hospital,
+    });
+    if (this.stats.closed.length > 500) this.stats.closed.shift();
+  }
+
+  analytics() {
+    const st = this.stats;
+    const rt = st.responseTimes;
+    const hist = new Array(8).fill(0); // 2-minute bins, last one = 14+
+    for (const t of rt) hist[Math.min(7, Math.floor(t / 120))]++;
+    const bySev = [1, 2, 3].map((sv) => {
+      const c = st.responseBySev.filter((x) => x[0] === sv);
+      return { severity: sv, calls: st.reported.filter((r) => r[1] === sv).length, avgResponse: c.length ? c.reduce((a, x) => a + x[1], 0) / c.length : null };
+    });
+    const bucket = 300; // 5 sim-minutes
+    const nowB = Math.floor(this.simTime / bucket);
+    const timeline = [];
+    for (let b = Math.max(0, nowB - 11); b <= nowB; b++) {
+      const row = { t: b * bucket, s1: 0, s2: 0, s3: 0 };
+      for (const [t, sv] of st.reported) if (Math.floor(t / bucket) === b) row['s' + sv]++;
+      timeline.push(row);
+    }
+    const sortMap = (m, k) => [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, k).map(([name, value]) => ({ name, value }));
+    return {
+      histogram: hist,
+      sla: rt.length ? rt.filter((t) => t <= 480).length / rt.length : null,
+      bySeverity: bySev,
+      timeline,
+      hospitalLoad: sortMap(st.hospitalLoad, 8),
+      wardCalls: sortMap(st.wardCalls, 8),
+      totalCalls: st.reported.length,
+    };
+  }
+
   // ---------------------------------------------------------------- views
 
   snapshot() {
@@ -388,12 +442,16 @@ class Simulation extends EventEmitter {
         route = [[round(lat), round(lng)], ...a.route.path.slice(seg + 1).map((v) => [round(g.lat[v]), round(g.lng[v])])];
         eta = a.route.total - (this.simTime - a.route.start);
       }
-      return { id: a.id, lat, lng, status: a.status, incidentId: a.incidentId, route, eta, trips: a.trips, base: a.base };
+      return {
+        id: a.id, lat, lng, status: a.status, incidentId: a.incidentId, route, eta, trips: a.trips, base: a.base,
+        baseName: a.baseName, utilization: this.simTime ? a.busy / this.simTime : 0, km: a.meters / 1000,
+        place: a.route ? '' : this.g.nearestLandmark(a.node),
+      };
     });
     const incidents = [...this.incidents.values()].map((i) => ({
       id: i.id, lat: i.lat, lng: i.lng, severity: i.severity, type: i.type, status: i.status,
       ambulance: i.ambulance, hospital: i.hospital, reportedAt: i.reportedAt, arrivedAt: i.arrivedAt,
-      etaAt: i.etaAt, street: i.street,
+      etaAt: i.etaAt, street: i.street, ward: i.ward, dispatchedAt: i.dispatchedAt ?? null, resolvedAt: i.resolvedAt,
     }));
     const rt = this.stats.responseTimes;
     const sorted = [...rt].sort((a, b) => a - b);
@@ -410,6 +468,7 @@ class Simulation extends EventEmitter {
       incidents,
       queue: this.queue.toSortedArray().filter((i) => i.status === 'queued').map((i) => i.id),
       blocked,
+      analytics: this.analytics(),
       stats: {
         dispatched: this.stats.dispatched,
         resolved: this.stats.resolved,

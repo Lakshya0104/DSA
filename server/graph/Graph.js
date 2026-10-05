@@ -2,7 +2,7 @@
 
 const KDTree = require('../ds/KDTree');
 const UnionFind = require('../ds/UnionFind');
-const { haversine, pointToSegment } = require('./geo');
+const { haversine, pointToSegment, pointInPolygon } = require('./geo');
 
 /**
  * Directed, weighted road graph stored as adjacency lists of edge ids
@@ -10,7 +10,7 @@ const { haversine, pointToSegment } = require('./geo');
  *   length / speed * trafficFactor, or Infinity if the road is closed.
  */
 class Graph {
-  constructor({ lat, lng, edges, hospitals, meta }) {
+  constructor({ lat, lng, edges, hospitals, meta, wards = [], landmarks = [] }) {
     this.lat = Float64Array.from(lat);
     this.lng = Float64Array.from(lng);
     this.n = this.lat.length;
@@ -47,6 +47,36 @@ class Graph {
       id: `H${i + 1}`, name: h.name, node: this.nearestNode(h.lat, h.lng),
       lat: h.lat, lng: h.lng,
     }));
+
+    // Landmarks (named bus stops) get their own KD-tree for "near X" labels.
+    this.landmarks = landmarks;
+    this.landmarkKd = landmarks.length ? new KDTree(landmarks.map((l) => l[1]), landmarks.map((l) => l[2])) : null;
+
+    // Wards: bounding boxes first (cheap reject), then ray casting.
+    this.wards = wards.map((w) => {
+      let s = 90, n = -90, west = 180, e = -180, cy = 0, cx = 0;
+      for (const [la, ln] of w.ring) { s = Math.min(s, la); n = Math.max(n, la); west = Math.min(west, ln); e = Math.max(e, ln); cy += la; cx += ln; }
+      return { name: w.name, ring: w.ring, box: [s, west, n, e], center: [cy / w.ring.length, cx / w.ring.length] };
+    });
+    this.wardOf = new Int16Array(this.n).fill(-1);
+    if (this.wards.length) for (let v = 0; v < this.n; v++) this.wardOf[v] = this.wardAt(this.lat[v], this.lng[v]);
+  }
+
+  wardAt(lat, lng) {
+    for (let i = 0; i < this.wards.length; i++) {
+      const [s, w, n, e] = this.wards[i].box;
+      if (lat >= s && lat <= n && lng >= w && lng <= e && pointInPolygon(lat, lng, this.wards[i].ring)) return i;
+    }
+    return -1;
+  }
+
+  wardName(v) { const i = this.wardOf[v]; return i >= 0 ? this.wards[i].name : ''; }
+
+  nearestLandmark(v) {
+    if (!this.landmarkKd) return '';
+    const i = this.landmarkKd.nearest(this.lat[v], this.lng[v]);
+    const l = this.landmarks[i];
+    return haversine(l[1], l[2], this.lat[v], this.lng[v]) < 900 ? l[0] : '';
   }
 
   cost(e) {

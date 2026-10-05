@@ -9,7 +9,7 @@ npm install
 npm start            # http://localhost:3000
 ```
 
-On first start the server downloads the road network and hospitals for the city's bounding box from the Overpass API and caches them in `data/`. Later starts are instant. If the download fails, the server falls back to a synthetic street grid so the app still works offline.
+For Bengaluru the app ships with a **real road network** in `data/bengaluru.json` (16,825 intersections, 14 hospitals, 171 BBMP wards). It was built by `scripts/build_bengaluru.py` from public BMTC bus-route geometry ([Vonter/bmtc-gtfs](https://github.com/Vonter/bmtc-gtfs)), and every BMTC route follows real roads. Ward boundaries come from [DataMeet](https://github.com/datameet/Municipal_Spatial_Data). For other cities, the server downloads the road network and hospitals for the city's bounding box from the Overpass API and caches them in `data/`. Later starts are instant. If the download fails, the server falls back to a synthetic street grid so the app still works offline.
 
 | Env var      | Default     | Meaning                                    |
 |--------------|-------------|--------------------------------------------|
@@ -21,7 +21,14 @@ On first start the server downloads the road network and hospitals for the city'
 
 `npm test` runs the test suite. Each data structure and algorithm is checked against a brute-force or reference implementation (Bellman-Ford, linear scan).
 
+### Shareable prototype
+
+`node scripts/build-standalone.js` writes `dist/rescueroute.html`. This single file runs the same backend modules in the browser, so it can be hosted anywhere without a server.
+
 ## What you can do
+
+The app has six views: **Command Center** (live map), **Route Lab**, **Coverage**, **Fleet**, **Analytics** and **Algorithms**. Incidents, routes and units link out to Google Maps, Street View and Google Maps directions.
+
 
 - **Report incident:** click the map. The call enters the triage queue, and the fastest ambulance by road is dispatched.
 - **Route planner:** click two points. Dijkstra and A* run side by side and their explored nodes are animated on the map.

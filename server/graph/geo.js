@@ -24,3 +24,15 @@ function pointToSegment(pLat, pLng, aLat, aLng, bLat, bLng) {
 }
 
 module.exports = { haversine, pointToSegment };
+
+/** Ray-casting point-in-polygon test. ring = [[lat, lng], ...]. */
+function pointInPolygon(lat, lng, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [yi, xi] = ring[i], [yj, xj] = ring[j];
+    if ((yi > lat) !== (yj > lat) && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+module.exports.pointInPolygon = pointInPolygon;
