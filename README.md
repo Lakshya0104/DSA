@@ -1,6 +1,6 @@
 # RescueRoute: City Traffic & Emergency Dispatch
 
-**Live demo:** https://rescueroute-hazel.vercel.app
+**Live demo:** https://rescueroute-hazel.vercel.app · **Beginner guide (PDF):** [docs/RescueRoute-Beginner-Guide.pdf](docs/RescueRoute-Beginner-Guide.pdf)
 
 A live emergency-dispatch dashboard running on a **real OpenStreetMap road network**. Incidents come in, ambulances get assigned by true road travel time, roads close, traffic builds up and ambulances re-plan. Every routing decision is made by data structures and graph algorithms implemented from scratch in this repo, with no routing libraries.
 

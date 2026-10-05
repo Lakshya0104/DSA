@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RescueRoute: A Beginner's Guide to the DSA Inside</title>
+<style>
+@font-face { font-family: 'Jakarta'; font-weight: 400; src: url(../../node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-400-normal.woff2); }
+@font-face { font-family: 'Jakarta'; font-weight: 600; src: url(../../node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-600-normal.woff2); }
+@font-face { font-family: 'Jakarta'; font-weight: 700; src: url(../../node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff2); }
+@font-face { font-family: 'Jakarta'; font-weight: 800; src: url(../../node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-800-normal.woff2); }
+@font-face { font-family: 'Serif4'; font-weight: 400; src: url(../../node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-400-normal.woff2); }
+@font-face { font-family: 'Serif4'; font-weight: 400; font-style: italic; src: url(../../node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-400-italic.woff2); }
+@font-face { font-family: 'Serif4'; font-weight: 600; src: url(../../node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-600-normal.woff2); }
+@font-face { font-family: 'Mono'; font-weight: 500; src: url(../../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2); }
+
+:root {
+  --ink: #0e1a33; --body: #2b3550; --muted: #66708a; --line: #dfe4ec; --paper: #ffffff; --tint: #f4f6fa;
+  --red: #d93c41; --red-soft: #fdecec; --blue: #3557c8; --blue-soft: #ebf0fc;
+  --teal: #0f8f80; --teal-soft: #e2f4f1; --amber: #c87400; --amber-soft: #fff2de; --violet: #7a42b0; --violet-soft: #f2eafa;
+}
+@page { size: A4; margin: 15mm 16mm 17mm; }
+* { box-sizing: border-box; }
+html { font-size: 10pt; }
+body { margin: 0; font-family: 'Serif4', Georgia, serif; color: var(--body); line-height: 1.5; background: var(--paper); }
+h1, h2, h3, h4 { font-family: 'Jakarta', Arial, sans-serif; color: var(--ink); line-height: 1.2; text-wrap: balance; }
+h2 { font-size: 21pt; font-weight: 800; margin: 0 0 4mm; letter-spacing: -0.01em; }
+h3 { font-size: 13pt; font-weight: 700; margin: 7mm 0 2mm; }
+h4 { font-size: 10.5pt; font-weight: 700; margin: 4mm 0 1mm; }
+p { margin: 0 0 3mm; }
+code, .mono { font-family: 'Mono', 'DejaVu Sans Mono', monospace; font-size: 0.86em; }
+p code, li code, td code { background: var(--tint); padding: 0.5px 4px; border-radius: 3px; color: var(--ink); }
+pre { font-family: 'Mono', 'DejaVu Sans Mono', monospace; font-size: 8.6pt; line-height: 1.5; background: #0e1a33; color: #e6ebf5; padding: 4mm 5mm; border-radius: 3mm; margin: 2mm 0 4mm; white-space: pre-wrap; break-inside: avoid; }
+pre .c { color: #8d9bbb; }
+pre .k { color: #ff9ea1; }
+pre .s { color: #8fe0c8; }
+ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+li { margin-bottom: 1mm; }
+b, strong { color: var(--ink); font-weight: 600; }
+table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; font-size: 9.4pt; break-inside: avoid; }
+th { font-family: 'Jakarta', Arial, sans-serif; font-weight: 700; text-align: left; color: var(--ink); background: var(--tint); padding: 2mm 2.5mm; border-bottom: 1.5px solid var(--ink); }
+td { padding: 1.8mm 2.5mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+figure { margin: 3mm 0 5mm; break-inside: avoid; }
+figure svg { display: block; width: 100%; height: auto; }
+figcaption { font-family: 'Jakarta', Arial, sans-serif; font-size: 8.4pt; color: var(--muted); margin-top: 1.5mm; }
+svg text { font-family: 'Jakarta', Arial, sans-serif; }
+
+.chapter { margin-top: 12mm; padding-top: 8mm; border-top: 2px solid var(--ink); }
+h2, h3, .eyebrow { break-after: avoid; }
+.lead { break-before: avoid; }
+.eyebrow { font-family: 'Jakarta', Arial, sans-serif; font-size: 8.5pt; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 2mm; }
+.lead { font-size: 12pt; line-height: 1.55; color: var(--ink); margin-bottom: 5mm; }
+.box { border-radius: 3mm; padding: 4mm 5mm; margin: 3mm 0 5mm; break-inside: avoid; }
+.box > :last-child { margin-bottom: 0; }
+.box .tag { font-family: 'Jakarta', Arial, sans-serif; font-size: 8pt; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 1.5mm; display: block; }
+.idea { background: var(--blue-soft); } .idea .tag { color: var(--blue); }
+.real { background: var(--teal-soft); } .real .tag { color: var(--teal); }
+.warn { background: var(--amber-soft); } .warn .tag { color: var(--amber); }
+.try { background: var(--violet-soft); } .try .tag { color: var(--violet); }
+.code-loc { font-family: 'Jakarta', Arial, sans-serif; font-size: 8.4pt; color: var(--muted); }
+.code-loc code { background: none; padding: 0; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.big-o { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 2mm 0 5mm; break-inside: avoid; }
+.big-o div { background: var(--tint); border-radius: 2.5mm; padding: 3mm; }
+.big-o b { display: block; font-family: 'Mono', monospace; font-size: 11pt; color: var(--ink); }
+.big-o span { font-family: 'Jakarta', Arial, sans-serif; font-size: 8.2pt; color: var(--muted); }
+
+/* cover */
+.cover { height: 262mm; display: flex; flex-direction: column; justify-content: space-between; break-after: page; }
+.cover-top { display: flex; align-items: center; gap: 4mm; }
+.logo { width: 14mm; height: 14mm; border-radius: 4mm; background: var(--red); display: grid; place-items: center; }
+.cover h1 { font-size: 46pt; font-weight: 800; letter-spacing: -0.03em; margin: 0 0 4mm; line-height: 1; }
+.cover .sub { font-size: 16pt; color: var(--body); max-width: 135mm; line-height: 1.4; }
+.cover .meta { font-family: 'Jakarta', Arial, sans-serif; font-size: 9.5pt; color: var(--muted); display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 4mm; }
+.toc { list-style: none; padding: 0; margin: 0; columns: 2; column-gap: 10mm; font-family: 'Jakarta', Arial, sans-serif; font-size: 9.6pt; }
+.toc li { display: flex; gap: 3mm; padding: 1.4mm 0; border-bottom: 1px dashed var(--line); break-inside: avoid; }
+.toc li span { color: var(--red); font-weight: 800; width: 6mm; }
+.toc li b { font-weight: 600; }
+.steps { counter-reset: s; list-style: none; padding: 0; }
+.steps li { counter-increment: s; position: relative; padding-left: 10mm; margin-bottom: 3mm; }
+.steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 6.5mm; height: 6.5mm; border-radius: 50%; background: var(--ink); color: #fff; font-family: 'Jakarta', Arial, sans-serif; font-weight: 700; font-size: 8.5pt; display: grid; place-items: center; }
+</style>
+</head>
+<body>
+
+<!-- ======================= COVER ======================= -->
+<section class="cover">
+  <div class="cover-top">
+    <div class="logo"><svg width="30" height="30" viewBox="0 0 24 24"><path fill="#fff" d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z"/></svg></div>
+    <div style="font-family:'Jakarta';font-weight:700;color:var(--ink);font-size:12pt">RescueRoute<br><span style="font-weight:400;color:var(--muted);font-size:9.5pt">Prototype guide</span></div>
+  </div>
+  <div>
+    <div class="eyebrow" style="color:var(--red)">A beginner's guide · Data Structures &amp; Algorithms</div>
+    <h1>How RescueRoute<br>works</h1>
+    <p class="sub">A friendly walk through the graphs, heaps and trees that send the right ambulance down the right road in Bengaluru. No prior project experience needed: if you know arrays, loops and recursion, you can follow every page.</p>
+  </div>
+  <div>
+    <h3 style="margin-top:0">What's inside</h3>
+    <ol class="toc">
+      <li><span>1</span><b>What the prototype does</b></li>
+      <li><span>2</span><b>Big-O in two minutes</b></li>
+      <li><span>3</span><b>Graphs: turning a city into data</b></li>
+      <li><span>4</span><b>Heaps and priority queues</b></li>
+      <li><span>5</span><b>Dijkstra's shortest path</b></li>
+      <li><span>6</span><b>A* search</b></li>
+      <li><span>7</span><b>Choosing the ambulance</b></li>
+      <li><span>8</span><b>Hospital coverage</b></li>
+      <li><span>9</span><b>KD-tree</b></li>
+      <li><span>10</span><b>Union-find</b></li>
+      <li><span>11</span><b>LRU cache</b></li>
+      <li><span>12</span><b>Small helpers</b></li>
+      <li><span>13</span><b>Exploring the code</b></li>
+      <li><span>14</span><b>Glossary</b></li>
+    </ol>
+  </div>
+  <div class="meta"><span>Live prototype: rescueroute-hazel.vercel.app</span><span>Code: github.com/lakshya0104/dsa</span></div>
+</section>
+
+<!-- ======================= 1 ======================= -->
+<section>
+  <div class="eyebrow" style="color:var(--red)">Chapter 1</div>
+  <h2>What the prototype does</h2>
+  <p class="lead">RescueRoute is a pretend emergency control room for Bengaluru. Calls come in, ambulances get sent, roads close, traffic builds up, and the system has to keep making good decisions, fast.</p>
+
+  <p>Open the live prototype and you'll see a map of the real city. Coloured dots are emergency calls. Little pills with numbers are ambulances (there are 14). Red-cross squares are hospitals. Everything moves on its own because a <b>simulation clock</b> keeps ticking: new calls appear every few simulated minutes, and ambulances drive along roads in real time.</p>
+
+  <h3>The life of one emergency call</h3>
+  <p>Follow a single call from start to finish and you'll touch almost every data structure in the project.</p>
+  <ol class="steps">
+    <li><b>Someone reports a call.</b> You click a street on the map. The app finds the nearest real intersection using a <b>KD-tree</b> (chapter 9) and names the place after the closest bus stop.</li>
+    <li><b>The call joins a queue.</b> If no ambulance is free, it waits in a <b>priority queue</b> (chapter 4) where critical calls always come out before minor ones.</li>
+    <li><b>The best ambulance is picked.</b> One clever run of <b>Dijkstra's algorithm</b> backwards from the patient finds which free ambulance can get there fastest by road (chapters 5 and 7).</li>
+    <li><b>The ambulance drives.</b> Its position along the route is found with <b>binary search</b> (chapter 12). If a road on its route closes, it re-plans using <b>A*</b> (chapter 6).</li>
+    <li><b>Patient goes to hospital.</b> Another search finds the nearest hospital by road. The <b>coverage map</b> uses one more Dijkstra variant to show which areas are far from any hospital (chapter 8).</li>
+  </ol>
+
+  <figure>
+    <svg viewBox="0 0 680 120">
+      <g font-size="12" font-weight="700" text-anchor="middle">
+        <rect x="0" y="30" width="110" height="60" rx="10" fill="#fdecec"/><text x="55" y="58" fill="#d93c41">Call reported</text><text x="55" y="76" fill="#66708a" font-weight="400" font-size="10">KD-tree</text>
+        <rect x="142" y="30" width="110" height="60" rx="10" fill="#fff2de"/><text x="197" y="58" fill="#c87400">Waits in queue</text><text x="197" y="76" fill="#66708a" font-weight="400" font-size="10">Priority queue</text>
+        <rect x="284" y="30" width="110" height="60" rx="10" fill="#ebf0fc"/><text x="339" y="58" fill="#3557c8">Unit chosen</text><text x="339" y="76" fill="#66708a" font-weight="400" font-size="10">Reverse Dijkstra</text>
+        <rect x="426" y="30" width="110" height="60" rx="10" fill="#f2eafa"/><text x="481" y="58" fill="#7a42b0">Drives there</text><text x="481" y="76" fill="#66708a" font-weight="400" font-size="10">A*, binary search</text>
+        <rect x="568" y="30" width="110" height="60" rx="10" fill="#e2f4f1"/><text x="623" y="58" fill="#0f8f80">To hospital</text><text x="623" y="76" fill="#66708a" font-weight="400" font-size="10">Dijkstra</text>
+      </g>
+      <g stroke="#9aa3b5" stroke-width="2" fill="#9aa3b5">
+        <line x1="112" y1="60" x2="134" y2="60"/><path d="M134 55 L141 60 L134 65z"/>
+        <line x1="254" y1="60" x2="276" y2="60"/><path d="M276 55 L283 60 L276 65z"/>
+        <line x1="396" y1="60" x2="418" y2="60"/><path d="M418 55 L425 60 L418 65z"/>
+        <line x1="538" y1="60" x2="560" y2="60"/><path d="M560 55 L567 60 L560 65z"/>
+      </g>
+    </svg>
+    <figcaption>Figure 1. Each stage of a call and the data structure that powers it.</figcaption>
+  </figure>
+
+  <div class="box real">
+    <span class="tag">Where the map comes from</span>
+    <p>The roads are real. They were built from public BMTC bus-route data: every bus route traces real Bengaluru roads, so joining them gives a road network of <b>16,825 intersections</b>. Ward boundaries come from BBMP open data, and the 14 hospitals are real hospitals the buses stop at.</p>
+  </div>
+</section>
+
+<!-- ======================= 2 ======================= -->
+<section class="chapter">
+  <div class="eyebrow" style="color:var(--blue)">Chapter 2</div>
+  <h2>Big-O in two minutes</h2>
+  <p class="lead">Big-O describes how the work grows as the input grows. It's the language we use to say "this approach is fast enough for a whole city" or "this one would take forever".</p>
+  <p>We write <code>n</code> for the input size. For graphs we use <code>V</code> for the number of vertices (intersections) and <code>E</code> for the number of edges (roads). In RescueRoute, <code>V = 16,825</code> and <code>E = 64,862</code>.</p>
+  <div class="big-o">
+    <div><b>O(1)</b><span>Constant. Same time no matter the size. Looking up a key in a hash map.</span></div>
+    <div><b>O(log n)</b><span>Halving each step. Binary search, heap push and pop.</span></div>
+    <div><b>O(n)</b><span>Look at everything once. Scanning an array.</span></div>
+    <div><b>O(n log n)</b><span>Sorting. Building a KD-tree.</span></div>
+  </div>
+  <h3>Why it matters here</h3>
+  <p>Suppose you want the distance from every intersection to every other one. The classic all-pairs algorithm, Floyd–Warshall, is <code>O(V³)</code>. With 16,825 intersections that is about <b>4.8 trillion</b> steps. Dijkstra from a single start is <code>O((V + E) log V)</code>, roughly 81,687 × 14 ≈ <b>1.1 million</b> steps. That difference is why the app answers in milliseconds instead of hours.</p>
+  <table>
+    <tr><th>Approach</th><th>Complexity</th><th class="num">Rough steps for Bengaluru</th></tr>
+    <tr><td>Floyd–Warshall (all pairs)</td><td><code>O(V³)</code></td><td class="num">4,763,000,000,000</td></tr>
+    <tr><td>Dijkstra (one start)</td><td><code>O((V+E) log V)</code></td><td class="num">≈ 1,150,000</td></tr>
+    <tr><td>Heap pop (one call)</td><td><code>O(log V)</code></td><td class="num">≈ 14</td></tr>
+  </table>
+  <div class="box idea"><span class="tag">Remember</span><p>Big-O ignores constant factors and small inputs. It tells you which approach <i>scales</i>. For a city-sized graph, scaling is everything.</p></div>
+</section>
+
+<!-- ======================= 3 ======================= -->
+<section class="chapter">
+  <div class="eyebrow" style="color:var(--blue)">Chapter 3</div>
+  <h2>Graphs: turning a city into data</h2>
+  <p class="lead">A graph is just a set of points (vertices) joined by lines (edges). Road maps are graphs in disguise.</p>
+  <div class="two">
+    <div>
+      <p><b>Vertex</b>: an intersection or bend in a road. Each one has a latitude and longitude.</p>
+      <p><b>Edge</b>: a stretch of road from one vertex to the next.</p>
+      <p><b>Directed</b>: an edge has a direction. A two-way road is stored as two edges, one each way. A one-way street is one edge.</p>
+      <p><b>Weighted</b>: every edge has a cost. In RescueRoute the cost is <b>travel time in seconds</b>, not distance.</p>
+    </div>
+    <figure style="margin:0">
+      <svg viewBox="0 0 300 220">
+        <g stroke="#c5cfe0" stroke-width="5" stroke-linecap="round">
+          <line x1="40" y1="40" x2="170" y2="30"/><line x1="40" y1="40" x2="70" y2="180"/><line x1="170" y1="30" x2="260" y2="110"/>
+          <line x1="70" y1="180" x2="190" y2="150"/><line x1="190" y1="150" x2="260" y2="110"/><line x1="170" y1="30" x2="190" y2="150"/>
+        </g>
+        <g fill="#0e1a33"><circle cx="40" cy="40" r="12"/><circle cx="170" cy="30" r="12"/><circle cx="70" cy="180" r="12"/><circle cx="190" cy="150" r="12"/><circle cx="260" cy="110" r="12"/></g>
+        <g font-size="11" font-weight="700" fill="#fff" text-anchor="middle"><text x="40" y="44">A</text><text x="170" y="34">B</text><text x="70" y="184">C</text><text x="190" y="154">D</text><text x="260" y="114">E</text></g>
+        <g font-size="11" font-weight="700" fill="#3557c8" text-anchor="middle"><text x="105" y="26">40s</text><text x="40" y="115">25s</text><text x="228" y="62">55s</text><text x="125" y="182">30s</text><text x="238" y="145">20s</text><text x="192" y="92">35s</text></g>
+      </svg>
+      <figcaption>Figure 2. Five intersections, six roads, each labelled with its travel time.</figcaption>
+    </figure>
+  </div>
+
+  <h3>The edge weight formula</h3>
+  <pre>cost(edge) = length_in_metres / speed_in_metres_per_second × traffic_factor
+<span class="c">// closed road   -> cost = Infinity (no search will ever use it)</span>
+<span class="c">// rush hour     -> traffic_factor goes from 1.0 up to about 3.5</span></pre>
+  <p>Using time as the weight is the key design choice. Traffic and road closures don't need special code anywhere else: they just change a weight, and every algorithm automatically takes the new situation into account.</p>
+
+  <h3>Adjacency list vs adjacency matrix</h3>
+  <p>There are two classic ways to store a graph. A <b>matrix</b> is a V × V table where cell [i][j] holds the cost from i to j. An <b>adjacency list</b> stores, for each vertex, only the roads that actually leave it.</p>
+  <table>
+    <tr><th>Storage</th><th class="num">Cells needed for Bengaluru</th><th>Find neighbours of v</th></tr>
+    <tr><td>Adjacency matrix</td><td class="num">16,825² = 283,080,625</td><td><code>O(V)</code>: scan a whole row</td></tr>
+    <tr><td>Adjacency list</td><td class="num">≈ 16,825 + 64,862</td><td><code>O(degree)</code>: usually 2–4 roads</td></tr>
+  </table>
+  <p>Road networks are <b>sparse</b>: an intersection connects to only a few others. A matrix would be 99.98% empty, so RescueRoute uses adjacency lists. It actually keeps <b>two</b>: <code>out[v]</code> (roads leaving v) and <code>in[v]</code> (roads arriving at v). The second list lets us search the graph backwards, which chapter 7 shows is a neat trick.</p>
+  <pre><span class="c">// server/graph/Graph.js (simplified)</span>
+<span class="k">class</span> Graph {
+  lat[], lng[]           <span class="c">// position of each vertex</span>
+  from[], to[]           <span class="c">// edge e goes from[e] -> to[e]</span>
+  length[], speed[], traffic[], blocked[]
+  out[v] = [edge ids leaving v]
+  in[v]  = [edge ids arriving at v]
+}</pre>
+  <p class="code-loc">In the code: <code>server/graph/Graph.js</code></p>
+</section>
+
+<!-- ======================= 4 ======================= -->
+<section class="chapter">
+  <div class="eyebrow" style="color:var(--amber)">Chapter 4</div>
+  <h2>Heaps and priority queues</h2>
+  <p class="lead">A priority queue is a "to-do list" where you always take out the most important item next. A binary heap is the usual way to build one.</p>
+
+  <h3>The binary min-heap</h3>
+  <p>A min-heap is a complete binary tree where every parent is smaller than (or equal to) its children. So the smallest item is always at the root. The neat part: we store the tree in a plain <b>array</b>, with no pointers.</p>
+  <div class="two">
+    <figure style="margin:0">
+      <svg viewBox="0 0 300 190">
+        <g stroke="#c5cfe0" stroke-width="3"><line x1="150" y1="30" x2="85" y2="95"/><line x1="150" y1="30" x2="215" y2="95"/><line x1="85" y1="95" x2="45" y2="160"/><line x1="85" y1="95" x2="125" y2="160"/><line x1="215" y1="95" x2="175" y2="160"/></g>
+        <g><circle cx="150" cy="30" r="20" fill="#d93c41"/><circle cx="85" cy="95" r="20" fill="#0e1a33"/><circle cx="215" cy="95" r="20" fill="#0e1a33"/><circle cx="45" cy="160" r="20" fill="#0e1a33"/><circle cx="125" cy="160" r="20" fill="#0e1a33"/><circle cx="175" cy="160" r="20" fill="#0e1a33"/></g>
+        <g fill="#fff" font-size="13" font-weight="700" text-anchor="middle"><text x="150" y="35">2</text><text x="85" y="100">5</text><text x="215" y="100">3</text><text x="45" y="165">9</text><text x="125" y="165">6</text><text x="175" y="165">8</text></g>
+      </svg>
+      <figcaption>Figure 3. A min-heap. The smallest value, 2, sits at the root.</figcaption>
+    </figure>
+    <div>
+      <p>The same heap as an array:</p>
+      <table style="text-align:center">
+        <tr><th class="num" style="text-align:center">i</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
+        <tr><th style="text-align:center">a[i]</th><td><b>2</b></td><td>5</td><td>3</td><td>9</td><td>6</td><td>8</td></tr>
+      </table>
+      <p>For the item at index <code>i</code>:</p>
+      <ul>
+        <li>parent is at <code>(i − 1) / 2</code> (rounded down)</li>
+        <li>children are at <code>2i + 1</code> and <code>2i + 2</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>The two moves: sift up and sift down</h3>
+  <ul>
+    <li><b>Push</b>: put the new item at the end of the array, then <b>sift up</b>: swap it with its parent while it is smaller. At most one swap per level, so <code>O(log n)</code>.</li>
+    <li><b>Pop</b>: take the root, move the last item to the root, then <b>sift down</b>: swap it with its smaller child while it is bigger. Also <code>O(log n)</code>.</li>
+  </ul>
+  <pre><span class="k">function</span> push(x):
+    a.append(x); i = a.length - 1
+    <span class="k">while</span> i > 0 <span class="k">and</span> a[parent(i)] > a[i]:
+        swap(a[i], a[parent(i)]); i = parent(i)</pre>
+
+  <h3>Use 1: the triage queue</h3>
+  <p>When all ambulances are busy, calls wait in a priority queue. The comparison function says "lower severity number first (1 = critical), and if equal, the earlier call first".</p>
+  <pre>compare(a, b) = (a.severity - b.severity) || (a.reportedAt - b.reportedAt)</pre>
+  <p>So a critical call at 08:20 is served before a minor call at 08:01, even though the minor call waited longer. A normal FIFO queue would get that wrong.</p>
+  <p class="code-loc">In the code: <code>server/ds/PriorityQueue.js</code></p>
+
+  <h3>Use 2: the indexed heap inside Dijkstra</h3>
+  <p>Dijkstra (next chapter) often discovers a <i>shorter</i> distance to a vertex that is already in the heap. It needs to <b>decrease its key</b>. A plain heap can't find the vertex quickly, so RescueRoute keeps an extra array <code>pos[v]</code> that remembers where each vertex sits in the heap. Every swap updates <code>pos</code>. Now decrease-key is: look up the position, change the value, sift up, all in <code>O(log V)</code>.</p>
+  <div class="box idea"><span class="tag">Why bother?</span><p>The lazy alternative pushes a duplicate entry every time a distance improves and skips stale ones when popped. That works, but the heap can grow much bigger than V. The indexed heap never holds more than one entry per vertex.</p></div>
+  <p class="code-loc">In the code: <code>server/ds/IndexedMinHeap.js</code></p>
+</section>
+
+<!-- ======================= 5 ======================= -->
+<section class="chapter">
+  <div class="eyebrow" style="color:var(--blue)">Chapter 5</div>
+  <h2>Dijkstra's shortest path</h2>
+  <p class="lead">Dijkstra's algorithm finds the cheapest route from one start vertex to every other vertex, as long as no edge has a negative cost. Travel times are never negative, so it fits roads perfectly.</p>
+
+  <h3>The intuition: spreading water</h3>
+  <p>Imagine pouring water at the start intersection. It spreads along roads at a steady speed. The order in which intersections get wet is exactly the order in which Dijkstra finalises them: closest first. Once an intersection is wet, nothing can reach it any faster later, so its distance is final.</p>
+
+  <h3>The algorithm</h3>
+  <pre>dist[all] = ∞ ; dist[start] = 0
+heap.push(start, 0)
+<span class="k">while</span> heap not empty:
+    u = heap.popMin()                 <span class="c">// closest unfinished vertex</span>
+    <span class="k">if</span> u == target: <span class="k">break</span>             <span class="c">// early exit: we already have the answer</span>
+    <span class="k">for each</span> road e from u to v:
+        newDist = dist[u] + cost(e)
+        <span class="k">if</span> newDist &lt; dist[v]:          <span class="c">// "relaxation"</span>
+            dist[v] = newDist
+            parent[v] = u
+            heap.pushOrDecrease(v, newDist)</pre>
+  <p>To get the actual route, start at the target and follow <code>parent</code> back to the start, then reverse the list.</p>
+
+  <h3>Worked example</h3>
+  <div class="two">
+    <figure style="margin:0">
+      <svg viewBox="0 0 300 200">
+        <g stroke="#c5cfe0" stroke-width="4" stroke-linecap="round">
+          <line x1="40" y1="100" x2="140" y2="30"/><line x1="40" y1="100" x2="140" y2="170"/><line x1="140" y1="30" x2="230" y2="60"/><line x1="140" y1="170" x2="230" y2="60"/><line x1="230" y1="60" x2="270" y2="160"/><line x1="140" y1="170" x2="270" y2="160"/>
+        </g>
+        <g stroke="#3557c8" stroke-width="6" stroke-linecap="round" opacity="0.85"><line x1="40" y1="100" x2="140" y2="170"/><line x1="140" y1="170" x2="140" y2="30"/><line x1="140" y1="30" x2="230" y2="60"/><line x1="230" y1="60" x2="270" y2="160"/></g>
+        <g stroke="#c5cfe0" stroke-width="4"><line x1="140" y1="170" x2="140" y2="30" stroke="#3557c8" stroke-width="6"/></g>
+        <g fill="#0e1a33"><circle cx="40" cy="100" r="13"/><circle cx="140" cy="30" r="13"/><circle cx="140" cy="170" r="13"/><circle cx="230" cy="60" r="13"/><circle cx="270" cy="160" r="13"/></g>
+        <g fill="#fff" font-size="11" font-weight="700" text-anchor="middle"><text x="40" y="104">A</text><text x="140" y="34">B</text><text x="140" y="174">C</text><text x="230" y="64">D</text><text x="270" y="164">E</text></g>
+        <g fill="#d93c41" font-size="11" font-weight="700" text-anchor="middle"><text x="80" y="56">4</text><text x="80" y="150">2</text><text x="128" y="104">1</text><text x="186" y="36">5</text><text x="196" y="128">8</text><text x="262" y="104">2</text><text x="206" y="182">10</text></g>
+      </svg>
+      <figcaption>Figure 4. Find the cheapest route from A to E. Blue is the answer.</figcaption>
+    </figure>
+    <div>
+      <table>
+        <tr><th>Pop</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+        <tr><td>start</td><td>0</td><td>∞</td><td>∞</td><td>∞</td><td>∞</td></tr>
+        <tr><td>A (0)</td><td>✓</td><td>4</td><td>2</td><td>∞</td><td>∞</td></tr>
+        <tr><td>C (2)</td><td>✓</td><td><b>3</b></td><td>✓</td><td>10</td><td>12</td></tr>
+        <tr><td>B (3)</td><td>✓</td><td>✓</td><td>✓</td><td><b>8</b></td><td>12</td></tr>
+        <tr><td>D (8)</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td><b>10</b></td></tr>
+        <tr><td>E (10)</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+      </table>
+      <p>Notice B: first reached at cost 4 directly, then improved to 3 through C. That improvement is a <b>decrease-key</b>. Final route: A → C → B → D → E, cost 2 + 1 + 5 + 2 = <b>10</b>.</p>
+    </div>
+  </div>
+
+  <div class="box warn"><span class="tag">Watch out</span><p>Dijkstra assumes costs are never negative. If a road could have a negative cost, a vertex marked "finished" might later get cheaper, and the algorithm would give wrong answers. For that case you'd use Bellman-Ford. RescueRoute's tests actually use Bellman-Ford as a slow-but-simple reference to check that Dijkstra is correct.</p></div>
+  <p><b>Complexity:</b> each vertex is popped once (<code>V</code> pops) and each edge relaxed once (<code>E</code> decrease-keys), each costing <code>O(log V)</code>. Total <code>O((V + E) log V)</code>.</p>
+  <p class="code-loc">In the code: <code>server/algorithms/search.js</code>, function <code>search()</code></p>
+</section>
+
+<!-- ======================= 6 ======================= -->
+<section class="chapter">
+  <div class="eyebrow" style="color:var(--violet)">Chapter 6</div>
+  <h2>A* search: Dijkstra with a sense of direction</h2>
+  <p class="lead">Dijkstra spreads out evenly in every direction, even away from the destination. A* adds a hint about where the goal is, so it explores mostly towards it.</p>
+
+  <h3>The one change</h3>
+  <p>Dijkstra orders the heap by <code>g(v)</code>, the cost so far. A* orders it by</p>
+  <pre>f(v) = g(v) + h(v)
+<span class="c">// g(v): known travel time from start to v</span>
+<span class="c">// h(v): an ESTIMATE of the remaining time from v to the goal</span></pre>
+  <p>In RescueRoute, <code>h(v)</code> = straight-line distance from v to the goal ÷ the fastest speed on any road. That's the time you'd need if you could fly straight there at top speed.</p>
+
+  <h3>Why the answer is still optimal</h3>
+  <p>A real drive can never beat flying in a straight line at top speed. So <code>h(v)</code> never <i>overestimates</i> the true remaining time. A heuristic with this property is called <b>admissible</b>, and with an admissible heuristic A* is guaranteed to return the shortest route, exactly like Dijkstra.</p>
+  <div class="box idea"><span class="tag">Analogy</span><p>You're in a new city walking to a landmark you can see on the skyline. You don't wander down streets heading the opposite way; you prefer streets that point towards it. That's A*.</p></div>
+
+  <h3>How much it saves</h3>
+  <p>The Route Lab view runs both algorithms on the same query. On a cross-city trip from Kempegowda Bus Station to Koramangala (17.7 minutes, 9.1 km):</p>
+  <figure>
+    <svg viewBox="0 0 640 110">
+      <text x="0" y="22" font-size="13" font-weight="700" fill="#0e1a33">Dijkstra</text>
+      <rect x="110" y="8" width="460" height="22" rx="11" fill="#3557c8"/><text x="580" y="24" font-size="12" font-weight="700" fill="#0e1a33">9,310</text>
+      <text x="0" y="64" font-size="13" font-weight="700" fill="#0e1a33">A*</text>
+      <rect x="110" y="50" width="108" height="22" rx="11" fill="#7a42b0"/><text x="228" y="66" font-size="12" font-weight="700" fill="#0e1a33">2,192</text>
+      <text x="110" y="100" font-size="11" fill="#66708a">intersections explored before reaching the goal · both found the same 17.7-minute route</text>
+    </svg>
+    <figcaption>Figure 5. A* explored 76% fewer intersections for the identical answer.</figcaption>
+  </figure>
+  <p>That's why ambulances use A* to <b>re-route</b> when a road closes: it needs to be fast, and it must still find the best route.</p>
+  <div class="box try"><span class="tag">Try it</span><p>Open Route Lab and pick two places close together, then two far apart. Compare how many intersections each algorithm explores. The gap grows with distance.</p></div>
+  <p class="code-loc">In the code: <code>astar()</code> in <code>server/algorithms/search.js</code>, heuristic in <code>Graph.heuristic()</code></p>
+</section>
+
+<!-- ======================= 7 ======================= -->
+<section class="chapter">
+  <div class="eyebrow" style="color:var(--red)">Chapter 7</div>
+  <h2>Choosing the ambulance: search backwards</h2>
+  <p class="lead">Fourteen ambulances, one patient. Which unit gets there first by road? The obvious way does fourteen searches. RescueRoute does one.</p>
+
+  <h3>The naive idea</h3>
+  <p>Run Dijkstra from each free ambulance to the patient and pick the smallest time. With k free units that's k searches: <code>O(k · (V + E) log V)</code>.</p>
+
+  <h3>The trick: reverse the roads</h3>
+  <p>Instead, start one search <b>at the patient</b> and walk the roads <b>backwards</b>, using the <code>in[v]</code> lists from chapter 3. Put every free ambulance's position in a "targets" set. The first target the search pops is the ambulance with the shortest drive to the patient, so we stop right there.</p>
+  <figure>
+    <svg viewBox="0 0 640 170">
+      <circle cx="320" cy="85" r="70" fill="#ebf0fc"/><circle cx="320" cy="85" r="40" fill="#d6e0fa"/>
+      <circle cx="320" cy="85" r="10" fill="#d93c41"/><text x="320" y="125" font-size="11" font-weight="700" text-anchor="middle" fill="#d93c41">patient</text>
+      <g font-size="10" font-weight="700" fill="#fff" text-anchor="middle">
+        <rect x="355" y="40" width="34" height="18" rx="9" fill="#0f8f80"/><text x="372" y="53">07</text>
+        <rect x="200" y="20" width="34" height="18" rx="9" fill="#0f8f80"/><text x="217" y="33">03</text>
+        <rect x="500" y="110" width="34" height="18" rx="9" fill="#0f8f80"/><text x="517" y="123">11</text>
+        <rect x="80" y="120" width="34" height="18" rx="9" fill="#0f8f80"/><text x="97" y="133">01</text>
+      </g>
+      <text x="420" y="30" font-size="11" fill="#0e1a33">first one reached: AMB-07, stop here</text>
+      <text x="0" y="165" font-size="11" fill="#66708a">The search grows outward from the patient. Units outside the shaded area are never even looked at.</text>
+    </svg>
+    <figcaption>Figure 6. One reverse search, early exit at the first ambulance found.</figcaption>
+  </figure>
+  <h3>Why "backwards" and not just "from the patient"?</h3>
+  <p>Because of one-way streets. The drive from ambulance to patient can be very different from patient to ambulance. Walking incoming edges measures the correct direction: the time for the ambulance to come <i>to</i> the patient.</p>
+  <div class="box real"><span class="tag">See it live</span><p>The Command Center sometimes logs "Straight-line nearest was AMB-07, but AMB-10 is faster by road". That's this algorithm beating the naive "closest on the map" guess.</p></div>
+  <p>After treatment, the same idea runs <b>forwards</b> from the patient with every hospital as a target, so the first hospital reached is the closest by road.</p>
+  <p class="code-loc">In the code: <code>_dispatchPending()</code> and <code>_sendToHospital()</code> in <code>server/sim/Simulation.js</code></p>
+</section>
+
+<!-- ======================= 8 ======================= -->
+<section class="chapter">
+  <div class="eyebrow" style="color:var(--teal)">Chapter 8</div>
+  <h2>Hospital coverage: many starts, one search</h2>
+  <p class="lead">The Coverage view colours every ward by how long it takes to drive to the nearest hospital. That needs a distance for all 16,825 intersections, from the nearest of 14 hospitals.</p>
+  <h3>Multi-source Dijkstra</h3>
+  <p>Put <b>all 14 hospitals</b> in the heap at distance 0 before the search starts, then run Dijkstra normally. Each intersection is reached first by whichever hospital is closest, so one run gives every intersection its "time to nearest hospital".</p>
+  <div class="box idea"><span class="tag">Think of it as</span><p>A pretend "super hospital" connected to all 14 real hospitals by roads that cost 0. One Dijkstra from the super hospital is exactly the same as a multi-source Dijkstra.</p></div>
+  <p>Cost: one search, <code>O((V + E) log V)</code>. In the browser it runs in about <b>24 milliseconds</b>. Compare that with the 4.8 trillion steps of Floyd–Warshall from chapter 2.</p>
+  <h3>From intersections to wards</h3>
+  <p>To colour a ward, we need to know which intersections are inside it. A ward is a polygon, and the test "is this point inside this polygon?" is done with <b>ray casting</b> (chapter 12). Then the average time per ward becomes its colour: green is close to care, red is far.</p>
+  <p>Run it from the reversed graph and the numbers mean "time for an ambulance at this street to reach a hospital", respecting one-way streets.</p>
+  <div class="box try"><span class="tag">Try it</span><p>Close a few roads near a hospital in the Command Center, then reopen the Coverage view. The wards around it turn more orange, because their shortest routes are now longer.</p></div>
+  <p class="code-loc">In the code: <code>server/algorithms/coverage.js</code></p>
+</section>
+
+<!-- ======================= 9 ======================= -->
+<section class="chapter">
+  <div class="eyebrow" style="color:var(--blue)">Chapter 9</div>
+  <h2>KD-tree: "what's nearest to this point?"</h2>
+  <p class="lead">Every click on the map needs the nearest intersection. Checking all 16,825 each time works, but a KD-tree answers in about 14 steps.</p>
+  <h3>How the tree is built</h3>
+  <p>A 2-d tree is a binary search tree for points on a plane. It splits the points in half again and again, alternating between a vertical cut (by longitude) and a horizontal cut (by latitude).</p>
+  <div class="two">
+    <figure style="margin:0">
+      <svg viewBox="0 0 300 220">
+        <rect x="5" y="5" width="290" height="210" fill="#f4f6fa" stroke="#c5cfe0"/>
+        <line x1="150" y1="5" x2="150" y2="215" stroke="#d93c41" stroke-width="3"/>
+        <line x1="5" y1="120" x2="150" y2="120" stroke="#3557c8" stroke-width="3"/>
+        <line x1="150" y1="80" x2="295" y2="80" stroke="#3557c8" stroke-width="3"/>
+        <line x1="80" y1="5" x2="80" y2="120" stroke="#0f8f80" stroke-width="2" stroke-dasharray="5 4"/>
+        <line x1="220" y1="80" x2="220" y2="215" stroke="#0f8f80" stroke-width="2" stroke-dasharray="5 4"/>
+        <g fill="#0e1a33"><circle cx="150" cy="150" r="5"/><circle cx="60" cy="120" r="5"/><circle cx="230" cy="80" r="5"/><circle cx="80" cy="50" r="5"/><circle cx="40" cy="180" r="5"/><circle cx="220" cy="160" r="5"/><circle cx="260" cy="30" r="5"/><circle cx="110" cy="190" r="5"/><circle cx="270" cy="190" r="5"/><circle cx="30" cy="40" r="5"/></g>
+        <circle cx="195" cy="135" r="6" fill="#d93c41"/><text x="196" y="125" font-size="10" font-weight="700" fill="#d93c41" text-anchor="middle">click</text>
+      </svg>
+      <figcaption>Figure 7. Red: first split. Blue: second level. Green: third level.</figcaption>
+    </figure>
+    <div>
+      <ol>
+        <li>Find the <b>median</b> point by longitude. It becomes the root and splits the map into left and right halves.</li>
+        <li>In each half, find the median by <b>latitude</b> and split again.</li>
+        <li>Keep alternating until each region has one point.</li>
+      </ol>
+      <p>Finding a median doesn't need a full sort. RescueRoute uses <b>quickselect</b> (the partition step from quicksort), which is <code>O(n)</code> on average. Building the whole tree is <code>O(n log n)</code>.</p>
+    </div>
+  </div>
+  <h3>Nearest-neighbour search with pruning</h3>
+  <ol>
+    <li>Walk down the tree towards the click, like a normal BST search, and remember the closest point seen.</li>
+    <li>On the way back up, ask at each split: could the <i>other</i> side hold something closer? Only if the distance from the click to the split line is less than the best distance so far.</li>
+    <li>If not, skip that entire half of the map. This <b>pruning</b> is where the speed comes from.</li>
+  </ol>
+  <p>RescueRoute uses KD-trees for three jobs: snapping clicks to the road network, naming each call after the nearest bus stop ("Near Koramangala Water Tank"), and a <b>radius query</b> that finds every road within 700 m of a traffic hotspot for rush hour.</p>
+  <p class="code-loc">In the code: <code>server/ds/KDTree.js</code>. The tests compare it with a brute-force scan on 200 random clicks.</p>
+</section>
+
+<!-- ======================= 10 ======================= -->
+<section class="chapter">
+  <div class="eyebrow" style="color:var(--violet)">Chapter 10</div>
+  <h2>Union-find: "are these two places still connected?"</h2>
+  <p class="lead">When you close roads, part of the city might get cut off completely. Union-find (also called a disjoint-set union, or DSU) counts the separate pieces almost instantly.</p>
+  <h3>The idea</h3>
+  <p>Every vertex starts in its own group. Each group is a little tree, and the root of the tree is the group's representative.</p>
+  <ul>
+    <li><b>find(x)</b>: follow parent pointers up to the root. Two vertices are connected if they have the same root.</li>
+    <li><b>union(a, b)</b>: find both roots and point one at the other. The two groups become one.</li>
+  </ul>
+  <pre><span class="k">function</span> find(x):
+    <span class="k">while</span> parent[x] != x:
+        parent[x] = parent[parent[x]]   <span class="c">// path halving: skip a level</span>
+        x = parent[x]
+    <span class="k">return</span> x
+
+<span class="k">function</span> union(a, b):
+    ra = find(a); rb = find(b)
+    <span class="k">if</span> ra == rb: <span class="k">return</span>
+    <span class="k">if</span> size[ra] &lt; size[rb]: swap(ra, rb)   <span class="c">// union by size: small under big</span>
+    parent[rb] = ra; size[ra] += size[rb]; components -= 1</pre>
+  <p>The two tricks, <b>path halving</b> and <b>union by size</b>, keep the trees very flat. Each operation costs <code>O(α(n))</code>, where α is the inverse Ackermann function. It's below 5 for any input you could ever store, so in practice it is constant time.</p>
+  <h3>Where RescueRoute uses it</h3>
+  <ol>
+    <li><b>After every road closure</b>: union the ends of every open road, then count components. If the count goes above 1, some area is cut off, and the Network panel shows how many intersections are stranded.</li>
+    <li><b>Cleaning the raw data</b>: bus-route data has tiny disconnected fragments. Union-find finds the largest connected piece and keeps only that, so every intersection can reach every other one.</li>
+  </ol>
+  <p class="code-loc">In the code: <code>server/ds/UnionFind.js</code>, used by <code>Graph.connectivity()</code></p>
+</section>
+
+<!-- ======================= 11 ======================= -->
+<section class="chapter">
+  <div class="eyebrow" style="color:var(--teal)">Chapter 11</div>
+  <h2>LRU cache: don't solve the same problem twice</h2>
+  <p class="lead">If someone asks for the same route twice, there's no need to search again. A cache remembers recent answers, and "least recently used" decides what to forget when it's full.</p>
+  <h3>Two structures working together</h3>
+  <div class="two">
+    <div>
+      <p><b>Hash map</b>: key → node. Finds a cached answer in <code>O(1)</code>.</p>
+      <p><b>Doubly linked list</b>: keeps nodes in order of use, most recent at the front. Moving a node to the front or removing the last one is <code>O(1)</code> because each node knows its neighbours.</p>
+    </div>
+    <figure style="margin:0">
+      <svg viewBox="0 0 300 120">
+        <g font-size="10" font-weight="700" text-anchor="middle">
+          <rect x="5" y="40" width="60" height="36" rx="8" fill="#e2f4f1"/><text x="35" y="62" fill="#0f8f80">newest</text>
+          <rect x="85" y="40" width="60" height="36" rx="8" fill="#f4f6fa"/><text x="115" y="62" fill="#0e1a33">route</text>
+          <rect x="165" y="40" width="60" height="36" rx="8" fill="#f4f6fa"/><text x="195" y="62" fill="#0e1a33">route</text>
+          <rect x="245" y="40" width="50" height="36" rx="8" fill="#fdecec"/><text x="270" y="62" fill="#d93c41">oldest</text>
+        </g>
+        <g stroke="#9aa3b5" stroke-width="2"><line x1="66" y1="52" x2="84" y2="52"/><line x1="66" y1="64" x2="84" y2="64"/><line x1="146" y1="52" x2="164" y2="52"/><line x1="146" y1="64" x2="164" y2="64"/><line x1="226" y1="52" x2="244" y2="52"/><line x1="226" y1="64" x2="244" y2="64"/></g>
+        <text x="150" y="105" font-size="10" fill="#66708a" text-anchor="middle">when full, drop from the right · on use, move to the left</text>
+      </svg>
+      <figcaption>Figure 8. The linked list keeps the usage order.</figcaption>
+    </figure>
+  </div>
+  <ul>
+    <li><b>get(key)</b>: look it up in the map. If found, move its node to the front.</li>
+    <li><b>set(key, value)</b>: add a node at the front. If the cache is over capacity, remove the node at the back and delete its key from the map.</li>
+  </ul>
+  <h3>The clever part: invalidation</h3>
+  <p>A cached route becomes wrong the moment a road closes or traffic changes. Instead of hunting for affected entries, the graph keeps a <b>version number</b> that goes up on every change, and the version is part of the cache key: <code>"from:to:version"</code>. Old entries simply never match again and eventually fall off the end.</p>
+  <p class="code-loc">In the code: <code>server/ds/LRUCache.js</code>, used by <code>compareRoutes()</code> in <code>Simulation.js</code></p>
+</section>
+
+<!-- ======================= 12 ======================= -->
+<section class="chapter">
+  <div class="eyebrow" style="color:var(--amber)">Chapter 12</div>
+  <h2>Small helpers that matter</h2>
+  <p class="lead">Not everything is a big algorithm. These three small techniques solve very specific problems neatly.</p>
+
+  <h3>Binary search: where is the ambulance right now?</h3>
+  <p>When a route is created, RescueRoute stores the cumulative travel time at each point: for example <code>[0, 12, 30, 41, 65, …]</code> seconds. To draw the ambulance at time <code>t</code>, it needs the first point whose time is at least <code>t</code>. The array is sorted, so this is a binary search (a "lower bound"): <code>O(log n)</code> instead of scanning the route. Then it slides the marker part-way along that segment.</p>
+  <pre><span class="k">function</span> lowerBound(arr, x):
+    lo = 0; hi = arr.length
+    <span class="k">while</span> lo &lt; hi:
+        mid = (lo + hi) / 2
+        <span class="k">if</span> arr[mid] &lt; x: lo = mid + 1 <span class="k">else</span>: hi = mid
+    <span class="k">return</span> lo</pre>
+
+  <h3>Ray casting: is this point inside the ward?</h3>
+  <p>Draw an imaginary ray from the point straight to the right and count how many times it crosses the polygon's edges. <b>Odd</b> means inside, <b>even</b> means outside. A quick bounding-box check first skips wards that are obviously too far away.</p>
+  <figure>
+    <svg viewBox="0 0 640 130">
+      <path d="M60 20 L220 30 L250 110 L140 120 L40 90 Z" fill="#e2f4f1" stroke="#0f8f80" stroke-width="2"/>
+      <circle cx="120" cy="70" r="6" fill="#d93c41"/><line x1="120" y1="70" x2="300" y2="70" stroke="#d93c41" stroke-width="2" stroke-dasharray="6 4"/>
+      <circle cx="236" cy="70" r="5" fill="none" stroke="#0e1a33" stroke-width="2"/>
+      <text x="310" y="74" font-size="11" fill="#0e1a33">1 crossing → odd → inside</text>
+      <path d="M380 20 L540 30 L570 110 L460 120 L360 90 Z" fill="#f4f6fa" stroke="#9aa3b5" stroke-width="2"/>
+      <circle cx="320" cy="110" r="0"/>
+      <circle cx="600" cy="55" r="6" fill="#3557c8"/><line x1="600" y1="55" x2="640" y2="55" stroke="#3557c8" stroke-width="2" stroke-dasharray="6 4"/>
+      <text x="420" y="74" font-size="11" fill="#66708a">0 crossings → outside</text>
+    </svg>
+    <figcaption>Figure 9. Count crossings: odd inside, even outside.</figcaption>
+  </figure>
+
+  <h3>Douglas–Peucker: fewer points, same shape</h3>
+  <p>The official ward boundaries have thousands of points, too many to draw quickly. Douglas–Peucker is a recursive algorithm: draw a straight line from the first to the last point, find the point farthest from that line, and if it's more than 25 metres away, keep it and recurse on both halves. Otherwise drop everything in between. It is <b>divide and conquer</b>, just like merge sort.</p>
+  <div class="box warn"><span class="tag">A real bug we hit</span><p>A ward boundary is a closed loop: its first and last points are the same. The "line from first to last" then has zero length, and every ward collapsed into a single point. The fix was to split each loop at its farthest point first and simplify the two halves separately. Edge cases matter!</p></div>
+</section>
+
+<!-- ======================= 13 ======================= -->
+<section class="chapter">
+  <div class="eyebrow" style="color:var(--red)">Chapter 13</div>
+  <h2>Exploring the code yourself</h2>
+  <p class="lead">Everything in this guide lives in a small, readable codebase. Here's a map of where to look.</p>
+  <table>
+    <tr><th>Concept</th><th>File</th><th>Chapter</th></tr>
+    <tr><td>Graph model, adjacency lists</td><td><code>server/graph/Graph.js</code></td><td>3</td></tr>
+    <tr><td>Indexed min-heap</td><td><code>server/ds/IndexedMinHeap.js</code></td><td>4</td></tr>
+    <tr><td>Triage priority queue</td><td><code>server/ds/PriorityQueue.js</code></td><td>4</td></tr>
+    <tr><td>Dijkstra, A*, reverse and multi-source search</td><td><code>server/algorithms/search.js</code></td><td>5, 6, 7</td></tr>
+    <tr><td>Hospital coverage</td><td><code>server/algorithms/coverage.js</code></td><td>8</td></tr>
+    <tr><td>KD-tree</td><td><code>server/ds/KDTree.js</code></td><td>9</td></tr>
+    <tr><td>Union-find</td><td><code>server/ds/UnionFind.js</code></td><td>10</td></tr>
+    <tr><td>LRU cache</td><td><code>server/ds/LRUCache.js</code></td><td>11</td></tr>
+    <tr><td>Simulation: dispatch, binary search, rerouting</td><td><code>server/sim/Simulation.js</code></td><td>7, 12</td></tr>
+    <tr><td>Building the Bengaluru map data</td><td><code>scripts/build_bengaluru.py</code></td><td>10, 12</td></tr>
+    <tr><td>Tests for all of the above</td><td><code>test/</code></td><td>all</td></tr>
+  </table>
+  <h3>Run it on your laptop</h3>
+  <pre>git clone https://github.com/lakshya0104/dsa.git
+cd dsa
+npm install
+npm start          <span class="c"># open http://localhost:3000</span>
+npm test           <span class="c"># runs the 12 correctness tests</span></pre>
+  <p>No database and no build step are needed. You only need Node.js 18 or newer.</p>
+
+  <h3>Practice exercises</h3>
+  <div class="box try"><span class="tag">Exercises, easiest first</span>
+    <ol>
+      <li>In <code>test/ds.test.js</code>, add a test that pushes 10 numbers into <code>PriorityQueue</code> and checks they come out sorted.</li>
+      <li>Change the triage rule so that a serious call waiting more than 10 minutes is treated as critical. Which file and which function would you change?</li>
+      <li>Replace Dijkstra's heap with a plain array scan for the minimum. Time the route planner before and after. What complexity do you get now?</li>
+      <li>Make the A* heuristic twice as large. Does A* still find the optimal route? Why or why not? (Hint: admissibility.)</li>
+      <li>Add a "nearest 3 ambulances" feature using the KD-tree. How would you change <code>nearest()</code> to keep the best k instead of the best 1?</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ======================= 14 ======================= -->
+<section class="chapter">
+  <div class="eyebrow" style="color:var(--blue)">Chapter 14</div>
+  <h2>Glossary</h2>
+  <table>
+    <tr><th style="width:28%">Term</th><th>Meaning</th></tr>
+    <tr><td><b>Admissible heuristic</b></td><td>An estimate that never overestimates the true remaining cost. It keeps A* optimal.</td></tr>
+    <tr><td><b>Adjacency list</b></td><td>Graph storage where each vertex keeps a list of its edges. Best for sparse graphs like roads.</td></tr>
+    <tr><td><b>Complete binary tree</b></td><td>Every level full except possibly the last, filled left to right. This is why a heap fits in an array.</td></tr>
+    <tr><td><b>Decrease-key</b></td><td>Lowering the priority of an item already inside a heap, then sifting it up.</td></tr>
+    <tr><td><b>Directed graph</b></td><td>Edges have a direction. Needed for one-way streets.</td></tr>
+    <tr><td><b>Early exit</b></td><td>Stopping a search as soon as the target is popped, instead of finishing the whole graph.</td></tr>
+    <tr><td><b>Heuristic</b></td><td>An informed guess that guides a search, like straight-line distance.</td></tr>
+    <tr><td><b>Median split</b></td><td>Dividing points at the middle value so both halves are the same size. Keeps a KD-tree balanced.</td></tr>
+    <tr><td><b>Multi-source search</b></td><td>Starting a search from several vertices at once, each at distance 0.</td></tr>
+    <tr><td><b>Path compression / halving</b></td><td>Union-find trick: make nodes point closer to the root while finding it.</td></tr>
+    <tr><td><b>Pruning</b></td><td>Skipping a part of the search that can't possibly contain a better answer.</td></tr>
+    <tr><td><b>Quickselect</b></td><td>Finds the k-th smallest item in <code>O(n)</code> average time using quicksort's partition step.</td></tr>
+    <tr><td><b>Relaxation</b></td><td>The Dijkstra step: "is going through u a cheaper way to reach v?" If so, update v.</td></tr>
+    <tr><td><b>Sparse graph</b></td><td>A graph with far fewer edges than V². Road networks are very sparse.</td></tr>
+    <tr><td><b>Weighted graph</b></td><td>Every edge has a cost. In RescueRoute the cost is travel time in seconds.</td></tr>
+  </table>
+  <div class="box real" style="margin-top:8mm"><span class="tag">One-line summary</span><p>RescueRoute turns Bengaluru into a weighted directed graph, then uses heaps for priority, Dijkstra and A* for routes, a reverse search for dispatch, a KD-tree for "nearest", union-find for connectivity and an LRU cache for repeats. Each one replaces a slow brute-force loop with something that scales to a whole city.</p></div>
+</section>
+
+</body>
+</html>
