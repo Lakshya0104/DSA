@@ -21,7 +21,9 @@
   const fmtMin = (s) => (s == null || !isFinite(s) ? '—' : `${(s / 60).toFixed(1)} min`);
   const fmtKm = (m) => (m >= 1000 ? `${(m / 1000).toFixed(2)} km` : `${Math.round(m)} m`);
 
+  const backend = window.RR_BACKEND; // set only in the standalone build
   const api = async (url, opts = {}) => {
+    if (backend) return backend.api(url, opts);
     const res = await fetch(url, {
       ...opts,
       headers: { 'Content-Type': 'application/json' },
@@ -34,7 +36,7 @@
   // ------------------------------------------------------------ map setup
   const map = L.map('map', { zoomControl: false, preferCanvas: false });
   L.control.zoom({ position: 'topright' }).addTo(map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  if (!backend) L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     maxZoom: 19, subdomains: 'abcd',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
   }).addTo(map);
@@ -83,6 +85,7 @@
       : `Synthetic grid · ${meta.nodes.toLocaleString()} nodes`;
     if (meta.source !== 'osm') { badge.classList.add('warn'); badge.title = 'OpenStreetMap download failed; using an offline street grid'; }
 
+    if (meta.roads) drawRoads(meta.roads);
     const [s, w, n, e] = meta.bbox;
     map.fitBounds([[s, w], [n, e]], { padding: [20, 20] });
     L.rectangle([[s, w], [n, e]], { color: '#2563eb', weight: 1, dashArray: '4 6', fill: false, interactive: false }).addTo(map);
@@ -97,7 +100,28 @@
     connect();
   }
 
+  /** Standalone build has no tile server, so draw the road graph as the basemap. */
+  function drawRoads(roads) {
+    map.getContainer().style.background = '#eef0ea';
+    const styles = {
+      residential: [{ color: '#d6d9de', weight: 3 }, { color: '#ffffff', weight: 2 }],
+      secondary: [{ color: '#d9c9a3', weight: 5 }, { color: '#fff4d6', weight: 3.5 }],
+      primary: [{ color: '#e0b26b', weight: 6.5 }, { color: '#fde3a7', weight: 4.5 }],
+      trunk: [{ color: '#d98f6a', weight: 7 }, { color: '#f9c9a8', weight: 5 }],
+    };
+    for (const cls of ['residential', 'secondary', 'primary', 'trunk']) {
+      for (const st of styles[cls]) {
+        L.polyline(roads[cls] || [], { renderer: canvas, interactive: false, lineCap: 'round', ...st }).addTo(map);
+      }
+    }
+  }
+
   function connect() {
+    if (backend) {
+      $('liveDot').classList.add('on');
+      backend.subscribe({ state: render, log: (evs) => evs.forEach(addLog) });
+      return;
+    }
     const es = new EventSource('/api/stream');
     es.addEventListener('open', () => $('liveDot').classList.add('on'));
     es.addEventListener('error', () => $('liveDot').classList.remove('on'));
