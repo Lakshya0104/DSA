@@ -1,6 +1,7 @@
 {
   "name": "rescueroute",
   "version": "1.0.0",
+  "homepage": "https://rescueroute-hazel.vercel.app",
   "description": "Emergency dispatch & city traffic routing dashboard powered by hand-written graph algorithms",
   "main": "server/index.js",
   "type": "commonjs",
